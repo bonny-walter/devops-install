@@ -1,50 +1,38 @@
 #!/bin/bash
 
-# Function to check OS type and version
-check_os() {
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        if [[ -f /etc/os-release ]]; then
-            . /etc/os-release
-            if [[ "$ID" == "ubuntu" ]]; then
-                echo "Operating system is Ubuntu."
-                return 0
-            else
-                echo "Operating system is Linux but not Ubuntu."
-                return 1
-            fi
-        else
-            echo "Cannot determine Linux distribution."
-            return 1
-        fi
-    else
-        echo "Operating system is not Linux."
-        return 1
-    fi
-}
 
-# Function to install Minikube
-install_minikube() {
-    echo "Installing Minikube..."
+sudo apt-get update -y
 
-    # Update package list and install prerequisites
-    sudo apt-get update -y
-    sudo apt-get install -y apt-transport-https ca-certificates curl
+sudo apt-get install curl wget apt-transport-https virtualbox virtualbox-ext-pack -y
 
-    # Download the latest Minikube binary
-    curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+echo "1st install docker"
 
-    # Install Minikube
-    sudo install minikube /usr/local/bin/
+sudo apt update && apt -y install docker.io
 
-    # Clean up
-    rm minikube
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo chmod 666 /var/run/docker.sock
 
-    echo "Minikube installation completed."
-}
+echo "Apply updates"
+sudo apt update -y 
+sudo apt upgrade -y
 
-# Main script
-if check_os; then
-    install_minikube
-else
-    echo "Minikube installation aborted."
-fi
+echo " Download Minikube Binary"
+wget https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo cp minikube-linux-amd64 /usr/local/bin/minikube
+sudo chmod +x /usr/local/bin/minikube
+minikube version
+
+
+echo "Install Kubectl utility"
+curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+chmod +x kubectl
+sudo mv kubectl /usr/local/bin/
+kubectl version -o yaml
+
+
+echo "Start the minikube"
+minikube start 
+minikube status
+
+
